@@ -9,6 +9,7 @@ import { createCustomerModule } from './createCustomerModule';
 
 export * from './createCustomerModule';
 export { createCustomerModule } from './createCustomerModule';
+export * from './definitions/entities';
 
 export const CariYonetimiModule = createCustomerModule();
 export default CariYonetimiModule;

@@ -4,6 +4,7 @@ import { type IModuleDefinition } from '@akalin/module_core';
 import { ModuleSettingsRegistry } from '@akalin/ui';
 import { CustomerServiceProvider, ICustomerServiceAdapter, defaultCustomerService } from './adapters/CustomerServiceContext';
 import CariModulAyarlariComponent from './components/CariModulAyarlari';
+import { customerCards, customerDocuments, customerReports } from './definitions/entities';
 
 export interface CreateCustomerModuleOptions {
   id?: string;
@@ -62,19 +63,10 @@ export function createCustomerModule(options: CreateCustomerModuleOptions = {}):
     icon: React.createElement(Users, { size: 20 }),
     iconName: 'Users',
     order,
-    cards: [
-      {
-        id: 'cari-hesap',
-        category: 'kart',
-        titleKey: 'Cari Kartı',
-        route: '/cariler',
-        useStandardCrud: true,
-        customActions: [
-          { action: 'bakiye-gor', labelKey: 'Bakiye Görüntüleme', description: 'Cari bakiye ve risk limitini görme' },
-          { action: 'ekstre-yazdir', labelKey: 'Ekstre Yazdırma', description: 'Cari hesap ekstresi dökümü alma' }
-        ]
-      }
-    ],
+    strictEntityRegistration: true,
+    cards: customerCards,
+    documents: customerDocuments,
+    reports: customerReports,
     routes: [
       {
         path: '/cariler',

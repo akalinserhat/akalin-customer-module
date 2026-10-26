@@ -59,6 +59,7 @@ export function createCustomerModule(options: CreateCustomerModuleOptions = {}):
   return {
     id,
     title,
+    aliases: ['cari_yonetimi', 'cari-yonetimi', 'MOD_CARI', 'MOD_CARI_YONETIMI', '@akalin/customer_module'],
     permissionPrefix,
     icon: React.createElement(Users, { size: 20 }),
     iconName: 'Users',

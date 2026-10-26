@@ -4,7 +4,7 @@ import { type IModuleDefinition } from '@akalin/module_core';
 import { ModuleSettingsRegistry } from '@akalin/ui';
 import { CustomerServiceProvider, ICustomerServiceAdapter, defaultCustomerService } from './adapters/CustomerServiceContext';
 import CariModulAyarlariComponent from './components/CariModulAyarlari';
-import { customerCards, customerDocuments, customerReports } from './definitions/entities';
+import { customerLists, customerCards, customerDocuments, customerReports } from './definitions/entities';
 
 export interface CreateCustomerModuleOptions {
   id?: string;
@@ -70,6 +70,7 @@ export function createCustomerModule(options: CreateCustomerModuleOptions = {}):
       '/cariler/cari-secim',
       '/cariler/:id/bulut-dosyalari'
     ],
+    lists: customerLists,
     cards: customerCards,
     documents: customerDocuments,
     reports: customerReports,

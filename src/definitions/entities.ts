@@ -49,7 +49,8 @@ export const customerDocuments: IModuleEntityDefinition[] = [];
 export const customerReports: IModuleEntityDefinition[] = [];
 
 export const customerEntities: IModuleEntityDefinition[] = [
-  ...customerLists
+  ...customerLists,
+  ...customerCards
 ];
 
 export default customerEntities;

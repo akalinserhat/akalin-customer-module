@@ -81,26 +81,6 @@ export function createCustomerModule(options: CreateCustomerModuleOptions = {}):
         requiredPermissions: ['cari.kart.cari-hesap.goruntule']
       },
       {
-        path: '/cariler/virman',
-        element: React.createElement(withProvider(CarilerPage)),
-        title: 'Cari Virman Fişleri'
-      },
-      {
-        path: '/cariler/dekont',
-        element: React.createElement(withProvider(CarilerPage)),
-        title: 'Cari Borç / Alacak Dekontları'
-      },
-      {
-        path: '/cariler/acilis-fisi',
-        element: React.createElement(withProvider(CarilerPage)),
-        title: 'Cari Açılış / Devir Fişleri'
-      },
-      {
-        path: '/cariler/ekstre',
-        element: React.createElement(withProvider(CarilerPage)),
-        title: 'Cari Hesap Ekstreleri'
-      },
-      {
         path: '/cariler/yeni/adres',
         element: React.createElement(withProvider(CariFormPage)),
         title: 'Cari Adresleri',

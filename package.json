@@ -6,7 +6,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "../akalin-ai-assistants/node_modules/.bin/tsc --noEmit",
+    "build": "../akalin-ai-assistants/node_modules/.bin/tsc --noEmit"
   },
   "keywords": [
     "webakus",

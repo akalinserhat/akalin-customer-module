@@ -120,7 +120,7 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
           sessionStorage.removeItem('webakus_cari_form_draft');
         }
       }
-    } catch (e) {}
+    } catch (e) { }
     return getCariFormDefaultValues({ cariConfig, initialData });
   });
 
@@ -258,7 +258,7 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
 
     try {
       sessionStorage.setItem('webakus_cari_form_draft', JSON.stringify(formData));
-    } catch (e) {}
+    } catch (e) { }
 
     navigate(targetUrl, {
       state: {
@@ -281,7 +281,7 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
       const a = (formData.ad || '').trim();
       const o = (formData.ortaIsim || '').trim();
       const s = (formData.soyad || '').trim();
-      
+
       const isimPart = o ? `${a} ${o}` : a;
       let newUnvan = '';
 
@@ -306,15 +306,15 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
             break;
         }
       }
-      
+
       newUnvan = newUnvan.trim();
       if (newUnvan.endsWith(",")) newUnvan = newUnvan.slice(0, -1).trim();
       if (newUnvan.startsWith(",")) newUnvan = newUnvan.slice(1).trim();
-      
+
       if (newUnvan && formData.unvan !== newUnvan) {
         setFormData(prev => ({ ...prev, unvan: newUnvan }));
       }
-      
+
       if (onTitleChange) {
         const resolvedTitle = newUnvan || formData.unvan || (isEditMode ? cariRecordTitle : t('Yeni Cari'));
         onTitleChange(resolvedTitle);
@@ -357,13 +357,62 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
       ...prev,
       [name]: value
     }));
-    
+
     if (errors[name]) {
       const error = validateField(name, value);
       setErrors(prev => ({ ...prev, [name]: error }));
     }
-    
+
     if (onDirtyChange) onDirtyChange(true);
+  };
+
+  const buildCariSavePayload = (sourceData: any) => {
+    const isPersonel = parseInt(sourceData.tur, 10) === 4;
+    const finalTipi = isPersonel ? 2 : parseInt(sourceData.tipi, 10);
+    const { __lastAddedAdres, ...cleanData } = sourceData || {};
+
+    return {
+      ...cleanData,
+      tipi: finalTipi,
+      tur: parseInt(sourceData.tur, 10),
+      riskLimiti: isPersonel || parseInt(sourceData.tur, 10) === 2 ? 0 : (parseFloat(sourceData.riskLimiti) || 0),
+      vadeGun: sourceData.vadeGun ? parseInt(sourceData.vadeGun, 10) : null,
+      tarih: sourceData.tarih ? sourceData.tarih : null,
+      dogumTarihi: sourceData.dogumTarihi ? sourceData.dogumTarihi : null,
+      profilResmiUrl: sourceData.profilResmiUrl || null,
+      gostergeUst: parseInt(sourceData.gostergeUst, 10) || 0,
+      gostergeAlt: parseInt(sourceData.gostergeAlt, 10) || 0,
+      gostergeSol: parseInt(sourceData.gostergeSol, 10) || 0,
+      gostergeSag: parseInt(sourceData.gostergeSag, 10) || 0,
+      adresler: (sourceData.adresler || []).map(a => ({
+        adresid: a.adresId || a.adresid || a.id,
+        baslik: a.baslik,
+        tipi: a.tipi,
+        varsayilanMi: a.varsayilanMi || false,
+        ilId: a.adresIds?.adresIlId || a.ilId,
+        ilAdi: a.adresIl || a.ilAdi,
+        ilceId: a.adresIds?.adresIlceId || a.ilceId,
+        ilceAdi: a.adresIlce || a.ilceAdi,
+        koyId: a.adresIds?.adresKoyId || a.koyId,
+        koyAdi: a.koyAdi,
+        mahalleId: a.adresIds?.adresMahalleId || a.mahalleId,
+        mahalleAdi: a.mahalleAdi,
+        caddeSokakId: a.adresIds?.adresCaddeSokakId || a.caddeSokakId,
+        caddeSokakAdi: a.caddeSokakAdi,
+        disKapiId: a.adresIds?.adresDisKapiId || a.disKapiId,
+        disKapiAdi: a.disKapiAdi,
+        icKapiId: a.adresIds?.adresIcKapiId || a.icKapiId,
+        icKapiAdi: a.icKapiAdi,
+        acikAdres: a.formattedAdres || a.acikAdres,
+        isimSoyisim: a.isimSoyisim,
+        telefon: a.telefon,
+        isAdresiMi: a.isAdresiMi || false,
+        kurumsalFaturaMi: a.kurumsalFaturaMi || false,
+        firmaAdi: a.firmaAdi,
+        vergiDairesi: a.vergiDairesi,
+        vergiNo: a.vergiNo
+      }))
+    };
   };
 
   const handleSubmit = async (e) => {
@@ -380,15 +429,15 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
         const fields = currentStrategy.getFields(tab.id) || [];
         for (const field of fields) {
           if (field.type === 'row') {
-             for (const sub of field.fields) {
-                 if (sub.required && (!formData[sub.name] || formData[sub.name].toString().trim() === '')) {
-                     newErrors[sub.name] = t('Bu alan zorunludur');
-                     hasError = true;
-                 }
-             }
+            for (const sub of field.fields) {
+              if (sub.required && (!formData[sub.name] || formData[sub.name].toString().trim() === '')) {
+                newErrors[sub.name] = t('Bu alan zorunludur');
+                hasError = true;
+              }
+            }
           } else if (field.required && (!formData[field.name] || formData[field.name].toString().trim() === '')) {
-              newErrors[field.name] = t('Bu alan zorunludur');
-              hasError = true;
+            newErrors[field.name] = t('Bu alan zorunludur');
+            hasError = true;
           }
         }
       }
@@ -396,8 +445,8 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
       // Genel ve Algoritmik Validasyon Kontrolleri
       const formValidation = validateCariForm(formData, t);
       if (!formValidation.isValid) {
-          newErrors = { ...newErrors, ...formValidation.errors };
-          hasError = true;
+        newErrors = { ...newErrors, ...formValidation.errors };
+        hasError = true;
       }
 
       if (hasError) {
@@ -408,51 +457,7 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
 
       setLoading(true);
 
-      const isPersonel = parseInt(formData.tur, 10) === 4;
-      const finalTipi = isPersonel ? 2 : parseInt(formData.tipi, 10);
-
-      const payload = {
-        ...formData,
-        tipi: finalTipi,
-        tur: parseInt(formData.tur, 10),
-        riskLimiti: isPersonel || parseInt(formData.tur, 10) === 2 ? 0 : (parseFloat(formData.riskLimiti) || 0),
-        vadeGun: formData.vadeGun ? parseInt(formData.vadeGun, 10) : null,
-        tarih: formData.tarih ? formData.tarih : null,
-        dogumTarihi: formData.dogumTarihi ? formData.dogumTarihi : null,
-        profilResmiUrl: formData.profilResmiUrl || null,
-        gostergeUst: parseInt(formData.gostergeUst, 10) || 0,
-        gostergeAlt: parseInt(formData.gostergeAlt, 10) || 0,
-        gostergeSol: parseInt(formData.gostergeSol, 10) || 0,
-        gostergeSag: parseInt(formData.gostergeSag, 10) || 0,
-        adresler: (formData.adresler || []).map(a => ({
-          adresid: a.adresId || a.id,
-          baslik: a.baslik,
-          tipi: a.tipi,
-          varsayilanMi: a.varsayilanMi || false,
-          ilId: a.adresIds?.adresIlId || a.ilId,
-          ilAdi: a.adresIl || a.ilAdi,
-          ilceId: a.adresIds?.adresIlceId || a.ilceId,
-          ilceAdi: a.adresIlce || a.ilceAdi,
-          koyId: a.adresIds?.adresKoyId || a.koyId,
-          koyAdi: a.koyAdi,
-          mahalleId: a.adresIds?.adresMahalleId || a.mahalleId,
-          mahalleAdi: a.mahalleAdi,
-          caddeSokakId: a.adresIds?.adresCaddeSokakId || a.caddeSokakId,
-          caddeSokakAdi: a.caddeSokakAdi,
-          disKapiId: a.adresIds?.adresDisKapiId || a.disKapiId,
-          disKapiAdi: a.disKapiAdi,
-          icKapiId: a.adresIds?.adresIcKapiId || a.icKapiId,
-          icKapiAdi: a.icKapiAdi,
-          acikAdres: a.formattedAdres || a.acikAdres,
-          isimSoyisim: a.isimSoyisim,
-          telefon: a.telefon,
-          isAdresiMi: a.isAdresiMi || false,
-          kurumsalFaturaMi: a.kurumsalFaturaMi || false,
-          firmaAdi: a.firmaAdi,
-          vergiDairesi: a.vergiDairesi,
-          vergiNo: a.vergiNo
-        }))
-      };
+      const payload = buildCariSavePayload(formData);
 
       let resultId;
       const targetId = initialData?.id ?? initialData?.Id ?? formData?.id ?? formData?.Id;
@@ -466,9 +471,21 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
         toast.success(t('Cari başarıyla eklendi.'));
       }
 
+      if (formData.__lastAddedAdres) {
+        window.dispatchEvent(new CustomEvent('ai-entity-updated', {
+          detail: {
+            entityType: 'CariAdres',
+            cariId: resultId,
+            cariUnvan: formData.unvan,
+            adres: formData.__lastAddedAdres
+          }
+        }));
+      }
+
       try {
         sessionStorage.removeItem('webakus_cari_form_draft');
-      } catch (e) {}
+        sessionStorage.removeItem('webakus_ai_waiting_entity');
+      } catch (e) { }
 
       if (onSuccess) onSuccess(resultId);
     } catch (err) {
@@ -489,7 +506,7 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
       return (
         <div className="form-group flex-1 flex-col relative" style={{ gridColumn: field.gridColumn }} key={field.name}>
           <label>{typeof field.label === 'string' ? t(field.label) : field.label} {field.required && <span className="text-danger">*</span>}</label>
-          <CariTuruSeciciInput 
+          <CariTuruSeciciInput
             id={field.id}
             tipi={formData.tipi}
             tur={formData.tur}
@@ -607,9 +624,9 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
       label: typeof rawLabel === 'string' ? t(rawLabel) : rawLabel,
       icon: typeof tTab.icon === 'string' ? getIcon(tTab.icon, { size: 18 }) : tTab.icon,
       content: (
-        <DynamicFormRenderer 
-          strategy={strategy} 
-          formData={formData} 
+        <DynamicFormRenderer
+          strategy={strategy}
+          formData={formData}
           onChange={handleChange}
           onBlur={handleBlur}
           errors={errors}
@@ -666,7 +683,7 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
 
       try {
         sessionStorage.setItem('webakus_cari_form_draft', JSON.stringify(dataToUse));
-      } catch (e) {}
+      } catch (e) { }
       navigate(currentBasePath, {
         state: {
           currentFormData: dataToUse,
@@ -683,11 +700,15 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
         tip={resolvedTip}
         cariUnvan={formData.unvan || [formData.ad, formData.ortaIsim, formData.soyad].filter(Boolean).join(' ') || (currentIsEdit ? t('Cari Düzenle') : t('Yeni Cari'))}
         defaultData={defaultAddressData}
-        onSave={(data) => {
+        onSave={async (data) => {
+          data.__handledNavigation = true;
+          data.__aiEventDispatched = true;
+
           const typeToUse = resolvedTip || 1;
           const isFirstOfType = !(formData.adresler || []).some(a => a.tipi === typeToUse);
+          const { __handledNavigation, __aiEventDispatched, ...cleanAdresData } = data;
           const newAdres = {
-            ...data,
+            ...cleanAdresData,
             adresId: null, // Yeni eklenen adres için ID null olmalıdır
             tipi: typeToUse,
             varsayilanMi: isFirstOfType,
@@ -703,10 +724,40 @@ const CariForm: React.FC<CariFormProps> = ({ initialData, onSuccess, onCancel, o
             newAdresler = [...(formData.adresler || []), newAdres];
           }
 
-          const updatedFormData = {
+          let isAiWaiting = Boolean(location.state?.fromAiChat);
+          if (!isAiWaiting) {
+            try {
+              isAiWaiting = Boolean(sessionStorage.getItem('webakus_ai_waiting_entity'));
+            } catch (e) { }
+          }
+
+          const updatedFormData: any = {
             ...formData,
-            adresler: newAdresler
+            adresler: newAdresler,
+            __lastAddedAdres: isAiWaiting ? undefined : cleanAdresData
           };
+
+          if (currentCariId && isAiWaiting) {
+            try {
+              const apiPayload = buildCariSavePayload(updatedFormData);
+              await cariService.update(currentCariId, apiPayload);
+              try {
+                sessionStorage.removeItem('webakus_ai_waiting_entity');
+              } catch (e) { }
+              toast.success(t('Yeni adres cari karta kaydedildi.'));
+            } catch (err: any) {
+              toast.error(err?.response?.data?.message || t('Adres cari karta kaydedilirken bir hata oluştu.'));
+            }
+
+            window.dispatchEvent(new CustomEvent('ai-entity-updated', {
+              detail: {
+                entityType: 'CariAdres',
+                cariId: currentCariId,
+                cariUnvan: updatedFormData.unvan,
+                adres: cleanAdresData
+              }
+            }));
+          }
 
           setFormData(updatedFormData);
           hasRestoredStateRef.current = true;

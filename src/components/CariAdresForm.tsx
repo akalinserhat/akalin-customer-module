@@ -17,11 +17,11 @@ export interface CariAdresFormProps {
   cariUnvan?: string;
 }
 
-export const CariAdresForm: React.FC<CariAdresFormProps> = ({ 
-  isOpen = true, 
-  onClose, 
-  onSave, 
-  tip, 
+export const CariAdresForm: React.FC<CariAdresFormProps> = ({
+  isOpen = true,
+  onClose,
+  onSave,
+  tip,
   defaultData,
   cariUnvan
 }) => {
@@ -42,10 +42,10 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
   const [adresIl, setAdresIl] = useState('');
   const [adresIlce, setAdresIlce] = useState('');
   const [acikAdres, setAcikAdres] = useState('');
-  
+
   // Hata Durumu (Modül Düzeyi Validator ile Yönetilir)
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   // Adres Seçici IDs
   const [adresIds, setAdresIds] = useState(null);
 
@@ -100,7 +100,7 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
       setAcikAdres(defaultData?.formattedAdres || defaultData?.acikAdres || defaultData?.adres || defaultData?.adresMetni || '');
       setErrors({});
       setActiveTabId('adres');
-      
+
       let computedAdresIds = defaultData?.adresIds;
       if (!computedAdresIds && defaultData?.ilId) {
         computedAdresIds = {
@@ -114,7 +114,7 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
         };
       }
       setAdresIds(computedAdresIds || null);
-      
+
       setFaturaTipi(defaultData?.faturaTipi || (defaultData?.kurumsalFaturaMi ? 2 : 1));
       setFirmaAdi(defaultData?.firmaAdi || '');
       setVergiDairesi(defaultData?.vergiDairesi || '');
@@ -122,7 +122,7 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
     }
   }, [isOpen, defaultData]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const validation = validateCariAdresForm(currentFormData, t);
 
     if (!validation.isValid) {
@@ -136,7 +136,7 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
       return;
     }
 
-    const payload = {
+    const payload: any = {
       tipi: tip,
       baslik: adresBaslik,
       isimSoyisim,
@@ -156,11 +156,25 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
       payload.vergiNo = faturaTipi === 2 ? vergiNo : null;
     }
 
-    onSave(payload);
-    onClose();
+    await Promise.resolve(onSave(payload));
+
+    if (!payload.__aiEventDispatched) {
+      window.dispatchEvent(new CustomEvent('ai-entity-updated', {
+        detail: {
+          entityType: 'CariAdres',
+          cariId: defaultData?.cariId ?? null,
+          cariUnvan: cariUnvan || '',
+          adres: payload
+        }
+      }));
+    }
+
+    if (!payload.__handledNavigation) {
+      onClose();
+    }
   };
 
-  const modalTitle = isFatura 
+  const modalTitle = isFatura
     ? t('Fatura Adresi')
     : t('Nakliye / Sevk Adresi');
 
@@ -172,34 +186,34 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
           <User size={18} className="text-accent" />
           {t('Teslimat / Yetkili Kişi')}
         </h4>
-        
+
         <div className="grid cols-1fr-1fr gap-16">
           <div className="flex-col gap-6">
             <label className="text-13 font-semibold text-secondary">{t('İsim Soyisim / Firma')}<span className="text-danger">*</span></label>
-            <BaseInput 
+            <BaseInput
               id="isimSoyisimInput"
-              value={isimSoyisim} 
+              value={isimSoyisim}
               onChange={e => {
                 setIsimSoyisim(e.target.value);
                 if (e.target.value.trim()) clearFieldError('isimSoyisim');
-              }} 
+              }}
               onBlur={() => handleFieldBlur('isimSoyisim', isimSoyisim)}
-              placeholder={t('Teslim alacak kişi veya firma')} 
-              error={Boolean(errors.isimSoyisim)} 
+              placeholder={t('Teslim alacak kişi veya firma')}
+              error={Boolean(errors.isimSoyisim)}
             />
             {errors.isimSoyisim && <FieldError error={errors.isimSoyisim} />}
           </div>
           <div className="flex-col gap-6">
             <label className="text-13 font-semibold text-secondary">{t('Telefon Numarası')}<span className="text-danger">*</span></label>
-            <PhoneInput 
-              value={telefon} 
+            <PhoneInput
+              value={telefon}
               onChange={val => {
                 setTelefon(val);
                 if (val && val.trim()) clearFieldError('telefon');
-              }} 
+              }}
               onBlur={() => handleFieldBlur('telefon', telefon)}
-              placeholder={t('0 (5XX) XXX XX XX')} 
-              className={`form-input ${errors.telefon ? 'is-invalid border-danger' : ''}`} 
+              placeholder={t('0 (5XX) XXX XX XX')}
+              className={`form-input ${errors.telefon ? 'is-invalid border-danger' : ''}`}
             />
             {errors.telefon && <FieldError error={errors.telefon} />}
           </div>
@@ -215,7 +229,7 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
             <MapPin size={18} className="text-accent" />
             {t('Adres Bilgileri')}
           </h4>
-          <AdresSeciciButton 
+          <AdresSeciciButton
             initialData={{
               ...defaultData,
               ...adresIds,
@@ -231,23 +245,23 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
               clearFieldError('adresIl');
               clearFieldError('adresIlce');
               clearFieldError('acikAdres');
-            }} 
+            }}
           />
         </div>
 
         <div className="flex-col gap-16">
           <div className="flex-col gap-6">
             <label className="text-13 font-semibold text-secondary">{t('Adres Başlığı')}<span className="text-danger">*</span></label>
-            <BaseInput 
+            <BaseInput
               id="adresBaslikInput"
-              value={adresBaslik} 
+              value={adresBaslik}
               onChange={e => {
                 setAdresBaslik(e.target.value);
                 if (e.target.value.trim()) clearFieldError('adresBaslik');
-              }} 
+              }}
               onBlur={() => handleFieldBlur('adresBaslik', adresBaslik)}
-              placeholder={t('Örn: Merkez Depo, Fabrika, Ev Adresi...')} 
-              error={Boolean(errors.adresBaslik)} 
+              placeholder={t('Örn: Merkez Depo, Fabrika, Ev Adresi...')}
+              error={Boolean(errors.adresBaslik)}
             />
             {errors.adresBaslik && <FieldError error={errors.adresBaslik} />}
           </div>
@@ -255,31 +269,31 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
           <div className="grid cols-1fr-1fr gap-16">
             <div className="flex-col gap-6">
               <label className="text-13 font-semibold text-secondary">{t('İl')}<span className="text-danger">*</span></label>
-              <BaseInput 
+              <BaseInput
                 id="adresIlInput"
-                value={adresIl || ''} 
+                value={adresIl || ''}
                 onChange={e => {
                   setAdresIl(e.target.value);
                   if (e.target.value.trim()) clearFieldError('adresIl');
-                }} 
+                }}
                 onBlur={() => handleFieldBlur('adresIl', adresIl)}
-                placeholder={t('İl')} 
-                error={Boolean(errors.adresIl)} 
+                placeholder={t('İl')}
+                error={Boolean(errors.adresIl)}
               />
               {errors.adresIl && <FieldError error={errors.adresIl} />}
             </div>
             <div className="flex-col gap-6">
               <label className="text-13 font-semibold text-secondary">{t('İlçe')}<span className="text-danger">*</span></label>
-              <BaseInput 
+              <BaseInput
                 id="adresIlceInput"
-                value={adresIlce || ''} 
+                value={adresIlce || ''}
                 onChange={e => {
                   setAdresIlce(e.target.value);
                   if (e.target.value.trim()) clearFieldError('adresIlce');
-                }} 
+                }}
                 onBlur={() => handleFieldBlur('adresIlce', adresIlce)}
-                placeholder={t('İlçe')} 
-                error={Boolean(errors.adresIlce)} 
+                placeholder={t('İlçe')}
+                error={Boolean(errors.adresIlce)}
               />
               {errors.adresIlce && <FieldError error={errors.adresIlce} />}
             </div>
@@ -287,18 +301,18 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
 
           <div className="flex-col gap-6">
             <label className="text-13 font-semibold text-secondary">{t('Açık Adres')}<span className="text-danger">*</span></label>
-            <BaseInput 
+            <BaseInput
               id="acikAdresInput"
               multiline={true}
               rows={3}
-              value={acikAdres} 
+              value={acikAdres}
               onChange={e => {
                 setAcikAdres(e.target.value);
                 if (e.target.value.trim()) clearFieldError('acikAdres');
-              }} 
+              }}
               onBlur={() => handleFieldBlur('acikAdres', acikAdres)}
-              placeholder={t('Mahalle, Sokak, Kapı No vb.')} 
-              error={Boolean(errors.acikAdres)} 
+              placeholder={t('Mahalle, Sokak, Kapı No vb.')}
+              error={Boolean(errors.acikAdres)}
             />
             {errors.acikAdres && <FieldError error={errors.acikAdres} />}
           </div>
@@ -314,7 +328,7 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
           <FileText size={18} className="text-accent" />
           {t('Fatura Türü ve Bilgileri')}
         </h4>
-        
+
         <div className="flex gap-24 mb-20">
           <label className="flex items-center gap-8 cursor-pointer text-14 font-semibold text-primary">
             <input type="radio" checked={faturaTipi === 1} onChange={() => setFaturaTipi(1)} className="radio-accent" />
@@ -330,47 +344,47 @@ export const CariAdresForm: React.FC<CariAdresFormProps> = ({
           <div className="flex-col gap-16 bg-secondary p-16 rounded-12 border-glass">
             <div className="flex-col gap-6">
               <label className="text-13 font-semibold text-secondary">{t('Firma Adı')}<span className="text-danger">*</span></label>
-              <BaseInput 
+              <BaseInput
                 id="firmaAdiInput"
-                value={firmaAdi} 
+                value={firmaAdi}
                 onChange={e => {
                   setFirmaAdi(e.target.value);
                   if (e.target.value.trim()) clearFieldError('firmaAdi');
-                }} 
+                }}
                 onBlur={() => handleFieldBlur('firmaAdi', firmaAdi)}
-                placeholder={t('Örn: ABC A.Ş.')} 
-                error={Boolean(errors.firmaAdi)} 
+                placeholder={t('Örn: ABC A.Ş.')}
+                error={Boolean(errors.firmaAdi)}
               />
               {errors.firmaAdi && <FieldError error={errors.firmaAdi} />}
             </div>
             <div className="grid cols-1fr-1fr gap-16">
               <div className="flex-col gap-6">
                 <label className="text-13 font-semibold text-secondary">{t('Vergi Dairesi')}<span className="text-danger">*</span></label>
-                <BaseInput 
+                <BaseInput
                   id="vergiDairesiInput"
-                  value={vergiDairesi} 
+                  value={vergiDairesi}
                   onChange={e => {
                     setVergiDairesi(e.target.value);
                     if (e.target.value.trim()) clearFieldError('vergiDairesi');
-                  }} 
+                  }}
                   onBlur={() => handleFieldBlur('vergiDairesi', vergiDairesi)}
-                  placeholder={t('Vergi Dairesi')} 
-                  error={Boolean(errors.vergiDairesi)} 
+                  placeholder={t('Vergi Dairesi')}
+                  error={Boolean(errors.vergiDairesi)}
                 />
                 {errors.vergiDairesi && <FieldError error={errors.vergiDairesi} />}
               </div>
               <div className="flex-col gap-6">
                 <label className="text-13 font-semibold text-secondary">{t('Vergi Numarası (VKN/TCKN)')}<span className="text-danger">*</span></label>
-                <BaseInput 
+                <BaseInput
                   id="vergiNoInput"
-                  value={vergiNo} 
+                  value={vergiNo}
                   onChange={e => {
                     setVergiNo(e.target.value);
                     if (e.target.value.trim()) clearFieldError('vergiNo');
-                  }} 
+                  }}
                   onBlur={() => handleFieldBlur('vergiNo', vergiNo)}
-                  placeholder={t('10 veya 11 Hane')} 
-                  error={Boolean(errors.vergiNo)} 
+                  placeholder={t('10 veya 11 Hane')}
+                  error={Boolean(errors.vergiNo)}
                 />
                 {errors.vergiNo && <FieldError error={errors.vergiNo} />}
               </div>

@@ -78,8 +78,14 @@ const CariSeciciList: React.FC<CariSeciciListProps> = ({
     }, [effectiveSearchText]);
 
     // Seçim işlemi
+    const isSelectingRef = useRef(false);
+    useEffect(() => {
+        isSelectingRef.current = false;
+    }, [isOpen]);
+
     const handleSelect = useCallback((item: any) => {
-        if (!item) return;
+        if (!item || isSelectingRef.current) return;
+        isSelectingRef.current = true;
         onSelect(item);
         if (onClose) {
             onClose();

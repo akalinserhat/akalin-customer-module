@@ -5,7 +5,8 @@
  * görsel standartlara (CariAvatar, status, bakiye vb.) sahip merkezi somut cari seçim ekranı.
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, Building, User, Plus } from 'lucide-react';
 import { BaseSelectionList, ActionMenuItem } from '@akalin/ui';
@@ -45,7 +46,36 @@ const CariSeciciList: React.FC<CariSeciciListProps> = ({
     ...restProps
 }) => {
     const { t } = useTranslation();
-    const effectiveSearchText = initialSearchText || initialSearchTerm;
+    const location = useLocation();
+    const locState = (location?.state || {}) as Record<string, any>;
+    const effectiveSearchText = initialSearchText || initialSearchTerm || locState.initialSearchText || locState.searchText || '';
+    const hasGlobalSearchSyncedRef = useRef(false);
+
+    useEffect(() => {
+        if (!effectiveSearchText) {
+            hasGlobalSearchSyncedRef.current = true;
+            return;
+        }
+        hasGlobalSearchSyncedRef.current = false;
+        const handleGlobalSearch = (e: any) => {
+            const val = e?.detail?.value ?? '';
+            if (val === effectiveSearchText) {
+                hasGlobalSearchSyncedRef.current = true;
+            }
+        };
+        if (typeof window !== 'undefined') {
+            window.addEventListener('global-search', handleGlobalSearch);
+        }
+        const timer = setTimeout(() => {
+            hasGlobalSearchSyncedRef.current = true;
+        }, 150);
+        return () => {
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('global-search', handleGlobalSearch);
+            }
+            clearTimeout(timer);
+        };
+    }, [effectiveSearchText]);
 
     // Seçim işlemi
     const handleSelect = useCallback((item: any) => {
@@ -262,8 +292,9 @@ const CariSeciciList: React.FC<CariSeciciListProps> = ({
         };
 
         // Arama metnini GlobalSearch'den gelen aramaData üzerinden dinamik olarak oku
-        const activeSearch = (args.aramaData && args.aramaData.value !== undefined)
-            ? args.aramaData.value
+        const aramaVal = args.aramaData?.value;
+        const activeSearch = (aramaVal !== undefined && (aramaVal !== '' || hasGlobalSearchSyncedRef.current))
+            ? aramaVal
             : effectiveSearchText;
 
         if (activeSearch && typeof activeSearch === 'string' && activeSearch.trim().length > 0) {
